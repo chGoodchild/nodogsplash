@@ -76,8 +76,8 @@ static const char *lookup_mimetype(const char *filename);
 static int do_binauth(struct MHD_Connection *connection, const char *binauth, t_client *client,
 	int *seconds_ret, int *upload_ret, int *download_ret)
 {
-        debug(LOG_ERR, "Custom log: This is a unique log statement to verify new code.");
-	char username_enc[4086] = {0};
+        debug(LOG_ERR, "Custom log: querymaxlen 16384.");
+	char username_enc[16384] = {0};
 	char password_enc[64] = {0};
 	const char *username;
 	const char *password;
