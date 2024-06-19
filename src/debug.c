@@ -63,7 +63,7 @@ Do not use directly, use the debug macro */
 void
 _debug(const char filename[], int line, int level, const char *format, ...)
 {
-	char buf[64];
+	char buf[28];
 	va_list vlist;
 	s_config *config;
 	FILE *out;

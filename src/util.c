@@ -318,7 +318,7 @@ get_ext_iface(void)
 }
 
 char *
-format_duration(time_t from, time_t to, char *buf)
+format_duration(time_t from, time_t to, char buf[64])
 {
 	int days, hours, minutes, seconds;
 	long long int secs;
@@ -354,14 +354,14 @@ format_duration(time_t from, time_t to, char *buf)
 }
 
 char *
-format_time(time_t time, char *buf)
+format_time(time_t time, char buf[64])
 {
 	strftime(buf, 64, "%a %b %d %H:%M:%S %Y", localtime(&time));
 	return buf;
 }
 
 char *
-get_uptime_string(char *buf)
+get_uptime_string(char buf[64])
 {
 	return format_duration(started_time, time(NULL), buf);
 }
@@ -377,7 +377,7 @@ int is_addr(const char* addr) {
 void
 ndsctl_status(FILE *fp)
 {
-	char timebuf[64];
+	char timebuf[32];
 	char durationbuf[64];
 	s_config *config;
 	t_client *client;
@@ -403,11 +403,7 @@ ndsctl_status(FILE *fp)
 	fprintf(fp, "Gateway Name: %s\n", config->gw_name);
 	fprintf(fp, "Managed interface: %s\n", config->gw_interface);
 	fprintf(fp, "Managed IP range: %s\n", config->gw_iprange);
-	fprintf(fp, "Server listening: http://%s\n", config->gw_http_name);
-	if (strncmp(config->gw_http_name_port, config->gw_http_name, strlen(config->gw_http_name_port)))
-		fprintf(fp, "Server listening: http://%s\n", config->gw_http_name_port);
-	if (config->gw_domain)
-		fprintf(fp, "Server listening: http://%s\n", config->gw_domain);
+	fprintf(fp, "Server listening: http://%s\n", config->gw_address);
 
 	if (config->binauth) {
 		fprintf(fp, "Binauth Script: %s\n", config->binauth);
@@ -428,14 +424,6 @@ ndsctl_status(FILE *fp)
 	fprintf(fp, "Auth Idle Timeout: %s\n", durationbuf);
 	format_duration(0, config->session_timeout * 60, durationbuf);
 	fprintf(fp, "Session Timeout: %s\n", durationbuf);
-
-	format_duration(0, config->session_timeout * 60, durationbuf);
-	fprintf(fp, "Session Timeout: %s\n", durationbuf);
-	fprintf(fp, "Block after Session timed out: %s\n", config->session_timeout_block ? "yes" : "no");
-
-	if (config->session_limit_block) {
-		fprintf(fp, "Block after Download limit: %d MB\n", config->session_limit_block);
-	}
 
 	if (config->redirectURL) {
 		fprintf(fp, "Redirect URL: %s\n", config->redirectURL);
@@ -598,9 +586,9 @@ ndsctl_clients(FILE *fp)
 		fprintf(fp, "added=%lld\n", (long long) client->session_start);
 		fprintf(fp, "active=%lld\n", (long long) client->counters.last_updated);
 		if (client->session_start) {
-			fprintf(fp, "duration=%lld\n", (long long) (now - client->session_start));
+			fprintf(fp, "duration=%lu\n", now - client->session_start);
 		} else {
-			fprintf(fp, "duration=%lld\n", 0ll);
+			fprintf(fp, "duration=%lu\n", 0ul);
 		}
 		fprintf(fp, "token=%s\n", client->token ? client->token : "none");
 		fprintf(fp, "state=%s\n", fw_connection_state_as_string(client->fw_connection_state));
@@ -633,9 +621,9 @@ ndsctl_json_client(FILE *fp, const t_client *client, time_t now)
 	fprintf(fp, "\"added\":%lld,\n", (long long) client->session_start);
 	fprintf(fp, "\"active\":%lld,\n", (long long) client->counters.last_updated);
 	if (client->session_start) {
-		fprintf(fp, "\"duration\":%lld,\n", (long long) (now - client->session_start));
+		fprintf(fp, "\"duration\":%lu,\n", now - client->session_start);
 	} else {
-		fprintf(fp, "\"duration\":%lld,\n", 0ll);
+		fprintf(fp, "\"duration\":%lu,\n", 0ul);
 	}
 	fprintf(fp, "\"token\":\"%s\",\n", client->token ? client->token : "none");
 	fprintf(fp, "\"state\":\"%s\",\n", fw_connection_state_as_string(client->fw_connection_state));
