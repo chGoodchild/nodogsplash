@@ -65,10 +65,13 @@ static int missing_parms;
 typedef enum {
 	oBadOption,
 	oSessionTimeout,
+	oSessionTimeoutBlock,
+	oSessionLimitBlock,
 	oDaemon,
 	oDebugLevel,
 	oMaxClients,
 	oGatewayName,
+	oGatewayDomainName,
 	oGatewayInterface,
 	oGatewayIPRange,
 	oGatewayIP,
@@ -113,10 +116,13 @@ static const struct {
 	int required;
 } keywords[] = {
 	{ "sessiontimeout", oSessionTimeout },
+	{ "sessiontimeoutblock", oSessionTimeoutBlock },
+	{ "sessionlimitblock", oSessionLimitBlock },
 	{ "daemon", oDaemon },
 	{ "debuglevel", oDebugLevel },
 	{ "maxclients", oMaxClients },
 	{ "gatewayname", oGatewayName },
+	{ "gatewaydomainname", oGatewayDomainName },
 	{ "gatewayinterface", oGatewayInterface },
 	{ "gatewayiprange", oGatewayIPRange },
 	{ "gatewayip", oGatewayIP },
@@ -184,12 +190,15 @@ config_init(void)
 	debug(LOG_DEBUG, "Setting default config parameters");
 	strncpy(config.configfile, DEFAULT_CONFIGFILE, sizeof(config.configfile)-1);
 	config.session_timeout = DEFAULT_SESSION_TIMEOUT;
+	config.session_timeout_block = DEFAULT_SESSION_TIMEOUT_BLOCK;
+	config.session_limit_block = DEFAULT_SESSION_LIMIT_BLOCK;
 	config.debuglevel = DEFAULT_DEBUGLEVEL;
 	config.maxclients = DEFAULT_MAXCLIENTS;
 	config.gw_name = safe_strdup(DEFAULT_GATEWAYNAME);
 	config.gw_interface = NULL;
 	config.gw_iprange = safe_strdup(DEFAULT_GATEWAY_IPRANGE);
 	config.gw_address = NULL;
+	config.gw_domain = NULL;
 	config.gw_ip = NULL;
 	config.gw_port = DEFAULT_GATEWAYPORT;
 	config.webroot = safe_strdup(DEFAULT_WEBROOT);
@@ -197,7 +206,6 @@ config_init(void)
 	config.statuspage = safe_strdup(DEFAULT_STATUSPAGE);
 	config.authdir = safe_strdup(DEFAULT_AUTHDIR);
 	config.denydir = safe_strdup(DEFAULT_DENYDIR);
-	config.preauthdir = safe_strdup(DEFAULT_PREAUTHDIR);
 	config.redirectURL = NULL;
 	config.preauth_idle_timeout = DEFAULT_PREAUTH_IDLE_TIMEOUT,
 	config.auth_idle_timeout = DEFAULT_AUTH_IDLE_TIMEOUT,
@@ -705,6 +713,20 @@ config_read(const char *filename)
 				exit(1);
 			}
 			break;
+		case oSessionTimeoutBlock:
+			if (sscanf(p1, "%u", &config.session_timeout_block) < 1) {
+				debug(LOG_ERR, "Bad arg %s to option %s on line %d in %s", p1, s, linenum, filename);
+				debug(LOG_ERR, "Exiting...");
+				exit(-1);
+			}
+			break;
+		case oSessionLimitBlock:
+			if (sscanf(p1, "%u", &config.session_limit_block) < 0) {
+				debug(LOG_ERR, "Bad arg %s to option %s on line %d in %s", p1, s, linenum, filename);
+				debug(LOG_ERR, "Exiting...");
+				exit(-1);
+			}
+			break;
 		case oDaemon:
 			if (config.daemon == -1 && ((value = parse_boolean(p1)) != -1)) {
 				config.daemon = value;
@@ -730,6 +752,9 @@ config_read(const char *filename)
 			break;
 		case oGatewayName:
 			config.gw_name = safe_strdup(p1);
+			break;
+		case oGatewayDomainName:
+			config.gw_domain = safe_strdup(p1);
 			break;
 		case oGatewayInterface:
 			config.gw_interface = safe_strdup(p1);

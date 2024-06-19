@@ -24,12 +24,12 @@
     @author Copyright (C) 2007 Paul Kube <nodogsplash@kokoro.ucsd.edu>
 */
 
-#define COPYRIGHT "NodogSplash, Copyright (C) 2016 - 2019, The Nodogsplash Contributors"
+#define COPYRIGHT "NodogSplash, Copyright (C) 2016 - 2023, The Nodogsplash Contributors"
 
 #ifndef _CONF_H_
 #define _CONF_H_
 
-#define VERSION "3.3.3-beta"
+#define VERSION "5.0.2"
 
 /*@{*/
 /** Defines */
@@ -56,6 +56,8 @@
 #define DEFAULT_GATEWAYPORT 2050
 #define DEFAULT_CHECKINTERVAL 30
 #define DEFAULT_SESSION_TIMEOUT 0
+#define DEFAULT_SESSION_TIMEOUT_BLOCK 0
+#define DEFAULT_SESSION_LIMIT_BLOCK 0
 #define DEFAULT_PREAUTH_IDLE_TIMEOUT 10
 #define DEFAULT_AUTH_IDLE_TIMEOUT 120
 #define DEFAULT_WEBROOT "/etc/nodogsplash/htdocs"
@@ -63,7 +65,6 @@
 #define DEFAULT_STATUSPAGE "status.html"
 #define DEFAULT_AUTHDIR "nodogsplash_auth"
 #define DEFAULT_DENYDIR "nodogsplash_deny"
-#define DEFAULT_PREAUTHDIR "nodogsplash_preauth"
 #define DEFAULT_MACMECHANISM MAC_BLOCK
 #define DEFAULT_SET_MSS 1
 #define DEFAULT_MSS_VALUE 0
@@ -135,8 +136,6 @@ typedef struct _MAC_t {
  * Configuration structure
  */
 typedef struct {
-    char *gw_http_name;
-    char *gw_http_name_port;
 	char configfile[255];		/**< @brief name of the config file */
 	char *ndsctl_sock;		/**< @brief ndsctl path to socket */
 	char *internal_sock;		/**< @brief internal path to socket */
@@ -148,6 +147,9 @@ typedef struct {
 	char *gw_iprange;		/**< @brief IP range on gw_interface we will manage */
 	char *gw_ip;			/**< @brief Internal IP (v4 or v6) for our web server */
 	char *gw_address;		/**< @brief Internal IP with port for our web server */
+	char *gw_domain;		/**< @brief A domain under which nodogsplash is reachable. */
+	char *gw_http_name;	        /**< @brief Either gw_domain if defined or gw_address with port if required */
+	char *gw_http_name_port;        /**< @brief Either gw_domain if defined or gw_address with port even not required */
 	char *gw_mac;			/**< @brief MAC address of the interface we manage */
 	unsigned int gw_port;		/**< @brief Port the webserver will run on */
 	char *webroot;			/**< @brief Directory containing splash pages, etc. */
@@ -156,8 +158,9 @@ typedef struct {
 	char *redirectURL;		/**< @brief URL to direct client to after authentication */
 	char *authdir;			/**< @brief Notional relative dir for authentication URL */
 	char *denydir;			/**< @brief Notional relative dir for denial URL */
-	char *preauthdir;		/**< @brief Notional relative dir for preauth URL */
 	int session_timeout;		/**< @brief Minutes of the default session length */
+	int session_timeout_block;	/**< @brief state of default session_timeout block or not */
+	int session_limit_block;	/**< @brief Download limit, MB after block */
 	int preauth_idle_timeout;	/**< @brief Minutes a preauthenticated client will be kept in the system */
 	int auth_idle_timeout;		/**< @brief Minutes an authenticated client will be kept in the system */
 	int checkinterval;		/**< @brief Period the the client timeout check thread will run, in seconds */
