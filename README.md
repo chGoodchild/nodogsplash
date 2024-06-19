@@ -79,3 +79,12 @@ make package/nodogsplash/compile V=s
 - [Nodogsplash Documentation](https://github.com/nodogsplash/nodogsplash)
 
 By following these steps, you can successfully rebuild the `nodogsplash` package in OpenWrt using `quilt` to manage your patches.
+
+# Usage
+
+opkg remove nodogsplash
+opkg install nodogsplash_5.0.0-1_mips_24kc.ipk
+service nodogsplash start
+service nodogsplash status
+logread | grep nodogsplash
+
