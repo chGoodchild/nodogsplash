@@ -90,3 +90,5 @@ service nodogsplash start
 service nodogsplash status
 logread | grep nodogsplash
 
+GLTollGate/v4.3.11$ scp -r www/cgi-bin/* root@192.168.8.1:/www/cgi-bin/.
+
