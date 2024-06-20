@@ -82,6 +82,7 @@ By following these steps, you can successfully rebuild the `nodogsplash` package
 
 # Usage
 
+```
 scp /home/pachai/Documents/openwrt/bin/packages/mips_24kc/routing/nodogsplash_5.0.0-1_mips_24kc.ipk root@192.168.8.1:/tmp/
 
 opkg remove nodogsplash
@@ -89,6 +90,7 @@ opkg install nodogsplash_5.0.0-1_mips_24kc.ipk
 service nodogsplash start
 service nodogsplash status
 logread | grep nodogsplash
+```
 
 GLTollGate/v4.3.11$ scp -r www/cgi-bin/* root@192.168.8.1:/www/cgi-bin/.
 
