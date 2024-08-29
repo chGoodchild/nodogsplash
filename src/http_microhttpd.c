@@ -76,7 +76,8 @@ static const char *lookup_mimetype(const char *filename);
 static int do_binauth(struct MHD_Connection *connection, const char *binauth, t_client *client,
 	int *seconds_ret, int *upload_ret, int *download_ret)
 {
-	char username_enc[64] = {0};
+        debug(LOG_ERR, "Custom log: querymaxlen 16384.");
+	char username_enc[16384] = {0};
 	char password_enc[64] = {0};
 	const char *username;
 	const char *password;
@@ -86,8 +87,35 @@ static int do_binauth(struct MHD_Connection *connection, const char *binauth, t_
 	int download;
 	int rc;
 
+	// Print debug info about the retrieved username and password
+	if (username) {
+		debug(LOG_ERR, "Username length: %zu\n", strlen(username));
+	} else {
+		debug(LOG_ERR, "Username not found\n");
+	}
+
+	if (password) {
+		debug(LOG_ERR, "Password length: %zu\n", strlen(password));
+	} else {
+		debug(LOG_ERR, "Password not found\n");
+	}
+
 	username = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "username");
 	password = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "password");
+
+
+	// Print debug info about the retrieved username and password
+	if (username) {
+		debug(LOG_ERR, "Username length: %zu\n", strlen(username));
+	} else {
+		debug(LOG_ERR, "Username not found\n");
+	}
+
+	if (password) {
+		debug(LOG_ERR, "Password length: %zu\n", strlen(password));
+	} else {
+		debug(LOG_ERR, "Password not found\n");
+	}
 
 	if ((username && uh_urlencode(username_enc, sizeof(username_enc), username, strlen(username)) == -1)
 		|| (password && uh_urlencode(password_enc, sizeof(password_enc), password, strlen(password)) == -1)) {

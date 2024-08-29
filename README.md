@@ -1,47 +1,96 @@
-## The Nodogsplash project
+# Rebuilding Nodogsplash using Quilt in OpenWrt
 
-Nodogsplash is a Captive Portal that offers a simple way to provide restricted access to the Internet by showing a splash page to the user before Internet access is granted.
+This guide provides detailed steps to rebuild the `nodogsplash` package in OpenWrt using `quilt` for patch management.
 
-It was derived originally from the codebase of the Wifi Guard Dog project.
+## Prerequisites
 
-Nodogsplash is released under the GNU General Public License.
+1. Ensure you have a working OpenWrt build environment. Follow the [OpenWrt build system setup guide](https://openwrt.org/docs/guide-developer/build-system/install-buildsystem) if you haven't done so already.
+2. Install `quilt`:
+    ```sh
+    sudo apt-get install quilt
+    ```
 
-* Original Homepage: [http://kokoro.ucsd.edu/nodogsplash](https://web.archive.org/web/20120108100828/http://kokoro.ucsd.edu/nodogsplash)
-* Wifidog: https://github.com/wifidog
-* GNU GPL: http://www.gnu.org/copyleft/gpl.html
+## Steps to Rebuild Nodogsplash
 
-The following describes what Nodogsplash does, how to get it and run it, and
-how to customize its behavior for your application.
+### Step 1: Navigate to the Nodogsplash Source Directory
 
-## Overview
+1. Open a terminal.
+2. Navigate to the `nodogsplash` source directory in your OpenWrt build environment:
+    ```sh
+    cd ~/Documents/openwrt/build_dir/target-*/nodogsplash-*/src/
+    ```
 
-**Nodogsplash** (NDS) is a high performance, small footprint Captive Portal, offering a simple splash page restricted Internet connection.
+### Step 2: Make Changes to the Source Code
 
-NoDogSplash is optimised for target devices with limited resources.
+1. Use `quilt` to manage patches. To begin editing a file, use:
+    ```sh
+    quilt edit <filename>
+    ```
+2. After making the desired changes, refresh the patch:
+    ```sh
+    quilt refresh
+    ```
 
-**If you want a more sophisticated authentication system** providing a dynamic web interface, you need [openNDS](https://github.com/openNDS/openNDS) rather than NoDogSplash.
+### Step 3: Navigate Back to the OpenWrt Root Directory
 
-**All modern mobile devices**, most desktop operating systems and most browsers now have a Captive Portal Detection (CPD) process that automatically issues a port 80 request on connection to a network. Nodogsplash detects this and serves its 'splash' web page.
+Return to the OpenWrt root directory to update and compile the package:
+```sh
+cd ~/Documents/openwrt
+```
 
-The splash page in its most basic form, contains a *Continue* button. When the user clicks on it, access to the Internet is granted, subject to a preset time interval.
+### Step 4: Update the Nodogsplash Package
 
-Nodogsplash does not currently support traffic control but is fully compatible with other stand alone systems such as Smart Queue Management (SQM).
+Update the `nodogsplash` package to incorporate your changes:
+```sh
+make package/nodogsplash/update V=s
+```
 
-## Split of Nodogsplash
+### Step 5: Compile the Nodogsplash Package
 
-Nodogsplash has been split into 2 projects:
+Compile the `nodogsplash` package with your changes:
+```sh
+make package/nodogsplash/compile V=s
+```
 
-* [OpenNDS](https://github.com/openNDS/openNDS) containing the FAS (Forward Authentication Service)
-* [Nodogsplash](https://github.com/nodogsplash/nodogsplash) containing a minimal version.
+### Step 6: Install the Compiled Package
 
-OpenNDS has been forked of from version 4.x (commit 4bd2f00166ed17ac14f9b78037fce5725bd894ce).
-Nodogsplash has been forked of from 3.x (commit 28541e787c989589bcd0939d3affd4029a235a3a).
+1. Locate the compiled package, which should be in the following directory:
+    ```sh
+    ls ~/Documents/openwrt/bin/packages/mips_24kc/routing/
+    ```
+    Look for a file named similar to `nodogsplash_5.0.0-1_mips_24kc.ipk`.
 
-The first version with different code bases is version 5.0
+2. Transfer the package to your OpenWrt router if it's not already there.
 
-## Documentation
+3. Install the package on your OpenWrt router using `opkg`:
+    ```sh
+    opkg install /path/to/nodogsplash_5.0.0-1_mips_24kc.ipk
+    ```
+    Replace `/path/to/nodogsplash_5.0.0-1_mips_24kc.ipk` with the actual path to the `.ipk` file.
 
-For full documentation please look at https://nodogsplashdocs.rtfd.io/
+## Troubleshooting
 
-You can select either *Stable* or *Latest* documentation.
+- If you encounter issues during compilation, check the logs for error messages and ensure all dependencies are met.
+- For more detailed information on managing patches with `quilt`, refer to the [quilt documentation](https://manpages.debian.org/testing/quilt/quilt.1.en.html).
+
+## Additional Resources
+
+- [OpenWrt Developer Guide](https://openwrt.org/docs/guide-developer/start)
+- [Nodogsplash Documentation](https://github.com/nodogsplash/nodogsplash)
+
+By following these steps, you can successfully rebuild the `nodogsplash` package in OpenWrt using `quilt` to manage your patches.
+
+# Usage
+
+```
+scp /home/pachai/Documents/openwrt/bin/packages/mips_24kc/routing/nodogsplash_5.0.0-1_mips_24kc.ipk root@192.168.8.1:/tmp/
+
+opkg remove nodogsplash
+opkg install nodogsplash_5.0.0-1_mips_24kc.ipk
+service nodogsplash start
+service nodogsplash status
+logread | grep nodogsplash
+```
+
+GLTollGate/v4.3.11$ scp -r www/cgi-bin/* root@192.168.8.1:/www/cgi-bin/.
 
