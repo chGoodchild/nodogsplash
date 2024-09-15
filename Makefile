@@ -1,80 +1,59 @@
+include $(TOPDIR)/rules.mk
 
-CC?=gcc
-CFLAGS?=-O2 -g -Wall
-CFLAGS+=-Isrc
-#CFLAGS+=-Wall -Wwrite-strings -pedantic -std=gnu99
-LDFLAGS+=-pthread
-LDLIBS=-lmicrohttpd
+PKG_NAME:=nodogsplash
+PKG_VERSION:=custom
+PKG_RELEASE:=1
 
-STRIP=yes
+PKG_SOURCE_PROTO:=local
+PKG_SOURCE_VERSION:=custom
 
-NDS_OBJS=src/auth.o src/client_list.o src/commandline.o src/conf.o \
-	src/debug.o src/fw_iptables.o src/path.o src/main.o src/http_microhttpd.o src/http_microhttpd_utils.o \
-	src/ndsctl_thread.o src/safe.o src/tc.o src/util.o src/template.o
+PKG_LICENSE:=GPL-2.0-only
+PKG_LICENSE_FILES:=LICENSE
 
-.PHONY: all clean install checkastyle fixstyle deb
+include $(INCLUDE_DIR)/package.mk
 
-all: nodogsplash ndsctl
+define Package/nodogsplash
+  SECTION:=net
+  CATEGORY:=Network
+  SUBMENU:=Captive Portals
+  TITLE:=NoDogSplash
+  DEPENDS:=+libpthread +libmicrohttpd
+endef
 
-%.o : %.c
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+define Package/nodogsplash/description
+  NoDogSplash is a Captive Portal.
+endef
 
-nodogsplash: $(NDS_OBJS) $(LIBHTTPD_OBJS)
-	$(CC) $(LDFLAGS) -o nodogsplash $+ $(LDLIBS)
+define Build/Prepare
+	mkdir -p $(PKG_BUILD_DIR)
+	$(CP) ./src/* $(PKG_BUILD_DIR)/
+	if [ -d "./src/." ]; then \
+		$(CP) ./src/.[!.]* $(PKG_BUILD_DIR)/ 2>/dev/null || true; \
+	fi
+endef
 
-ndsctl: src/ndsctl.o
-	$(CC) $(LDFLAGS) -o ndsctl $+ $(LDLIBS)
+define Build/Configure
+	$(call Build/Configure/Default)
+endef
 
-clean:
-	rm -f nodogsplash ndsctl src/*.o
-	rm -rf dist
+define Build/Compile
+	$(MAKE) -C $(PKG_BUILD_DIR) \
+		CC="$(TARGET_CC)" \
+		CFLAGS="$(TARGET_CFLAGS) -Wall" \
+		LDFLAGS="$(TARGET_LDFLAGS) -lmicrohttpd"
+endef
 
-install:
-#ifeq(yes,$(STRIP))
-	strip nodogsplash
-	strip ndsctl
-#endif
-	mkdir -p $(DESTDIR)/usr/bin/
-	cp ndsctl $(DESTDIR)/usr/bin/
-	cp nodogsplash $(DESTDIR)/usr/bin/
-	mkdir -p $(DESTDIR)/etc/nodogsplash/htdocs/images
-	cp resources/nodogsplash.conf $(DESTDIR)/etc/nodogsplash/
-	cp resources/splash.html $(DESTDIR)/etc/nodogsplash/htdocs/
-	cp resources/splash.css $(DESTDIR)/etc/nodogsplash/htdocs/
-	cp resources/status.html $(DESTDIR)/etc/nodogsplash/htdocs/
-	cp resources/splash.jpg $(DESTDIR)/etc/nodogsplash/htdocs/images/
+define Package/nodogsplash/install
+	$(INSTALL_DIR) $(1)/usr/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/nodogsplash $(1)/usr/sbin/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ndsctl $(1)/usr/sbin/
+	$(INSTALL_DIR) $(1)/etc/nodogsplash/htdocs/images
+	$(INSTALL_CONF) ./resources/nodogsplash.conf $(1)/etc/nodogsplash/
+	$(INSTALL_DATA) ./resources/splash.html $(1)/etc/nodogsplash/htdocs/
+	$(INSTALL_DATA) ./resources/splash.css $(1)/etc/nodogsplash/htdocs/
+	$(INSTALL_DATA) ./resources/status.html $(1)/etc/nodogsplash/htdocs/
+	$(INSTALL_DATA) ./resources/splash.jpg $(1)/etc/nodogsplash/htdocs/images/
+endef
 
-checkastyle:
-	@command -v astyle >/dev/null 2>&1 || \
-	{ echo >&2 "We need 'astyle' but it's not installed. Aborting."; exit 1; }
+$(eval $(call BuildPackage,nodogsplash))
 
-checkstyle: checkastyle
-	@if astyle \
-		--dry-run \
-		--lineend=linux \
-		--suffix=none \
-		--style=kr \
-		--indent=force-tab \
-		--formatted --recursive "src/*.c" "src/*.h" | grep -q -i formatted ; then \
-			echo Please fix formatting or run fixstyle ; false ; else \
-			echo Style looks ok. ; fi
-
-fixstyle: checkastyle
-	@echo "\033[1;34mChecking style ...\033[00m"
-	@if astyle \
-		--dry-run \
-		--lineend=linux \
-		--suffix=none \
-		--style=kr \
-		--indent=force-tab \
-		--formatted --recursive "src/*.c" "src/*.h" | grep -q -i formatted ; then \
-			echo "\033[1;33mPrevious files have been corrected\033[00m" ; else \
-			echo "\033[0;32mAll files are ok\033[00m" ; fi
-
-DEBVERSION=$(shell dpkg-parsechangelog | awk -F'[ -]' '/^Version/{print($$2); exit;}' )
-deb: clean
-	mkdir -p dist/nodogsplash-$(DEBVERSION)
-	tar --exclude dist --exclude ".git*" -cf - . | (cd dist/nodogsplash-$(DEBVERSION) && tar xf -)
-	cd dist && tar cjf nodogsplash_$(DEBVERSION).orig.tar.bz2 nodogsplash-$(DEBVERSION) && cd -
-	cd dist/nodogsplash-$(DEBVERSION) && dpkg-buildpackage -us -uc && cd -
-	rm -rf dist/nodogsplash-$(DEBVERSION)
